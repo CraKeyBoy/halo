@@ -16,7 +16,6 @@ import run.halo.app.service.base.CrudService;
  */
 public interface ThemeSettingService extends CrudService<ThemeSetting, Integer> {
 
-
     /**
      * Saves theme setting.
      *
@@ -55,15 +54,6 @@ public interface ThemeSettingService extends CrudService<ThemeSetting, Integer> 
      */
     @NonNull
     Map<String, Object> listAsMapBy(@NonNull String themeId);
-
-    /**
-     * Replace theme setting url in batch.
-     *
-     * @param oldUrl old blog url.
-     * @param newUrl new blog url.
-     * @return replaced theme settings.
-     */
-    List<ThemeSetting> replaceUrl(@NonNull String oldUrl, @NonNull String newUrl);
 
     /**
      * Delete unused theme setting.

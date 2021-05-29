@@ -2,6 +2,7 @@ package run.halo.app.service;
 
 import com.qiniu.common.Zone;
 import com.qiniu.storage.Region;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -106,7 +107,7 @@ public interface OptionService extends CrudService<Option, Integer> {
      * @return a map of option
      */
     @NonNull
-    Map<String, Object> listOptions(@Nullable List<String> keys);
+    Map<String, Object> listOptions(@Nullable Collection<String> keys);
 
     /**
      * Lists all option dtos.
@@ -224,7 +225,7 @@ public interface OptionService extends CrudService<Option, Integer> {
 
     /**
      * Gets property value by blog property.
-     * <p>
+     *
      * Default value from property default value.
      *
      * @param property blog property must not be null
@@ -281,7 +282,8 @@ public interface OptionService extends CrudService<Option, Integer> {
      * @return an optional value enum value
      */
     @NonNull
-    <V, E extends ValueEnum<V>> Optional<E> getValueEnumByProperty(@NonNull PropertyEnum property,
+    <V, E extends Enum<E> & ValueEnum<V>> Optional<E> getValueEnumByProperty(
+        @NonNull PropertyEnum property,
         @NonNull Class<V> valueType, @NonNull Class<E> enumType);
 
     /**
@@ -296,7 +298,8 @@ public interface OptionService extends CrudService<Option, Integer> {
      * @return value enum value or null if the default value is null
      */
     @Nullable
-    <V, E extends ValueEnum<V>> E getValueEnumByPropertyOrDefault(@NonNull PropertyEnum property,
+    <V, E extends Enum<E> & ValueEnum<V>> E getValueEnumByPropertyOrDefault(
+        @NonNull PropertyEnum property,
         @NonNull Class<V> valueType, @NonNull Class<E> enumType, @Nullable E defaultValue);
 
     /**
@@ -465,15 +468,6 @@ public interface OptionService extends CrudService<Option, Integer> {
      * @return true or false.
      */
     Boolean isEnabledAbsolutePath();
-
-    /**
-     * Replace option url in batch.
-     *
-     * @param oldUrl old blog url.
-     * @param newUrl new blog url.
-     * @return replaced options.
-     */
-    List<OptionDTO> replaceUrl(@NonNull String oldUrl, @NonNull String newUrl);
 
     /**
      * Converts to option output dto.

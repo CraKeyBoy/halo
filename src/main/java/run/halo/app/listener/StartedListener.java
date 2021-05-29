@@ -67,6 +67,9 @@ public class StartedListener implements ApplicationListener<ApplicationStartedEv
     @Value("${spring.datasource.password}")
     private String password;
 
+    @Value("${springfox.documentation.enabled}")
+    private Boolean documentationEnabled;
+
     @Override
     public void onApplicationEvent(ApplicationStartedEvent event) {
         try {
@@ -95,9 +98,9 @@ public class StartedListener implements ApplicationListener<ApplicationStartedEv
         log.info(AnsiOutput
             .toString(AnsiColor.BRIGHT_BLUE, "Halo admin started at   ", blogUrl, "/",
                 haloProperties.getAdminPath()));
-        if (!haloProperties.isDocDisabled()) {
+        if (documentationEnabled) {
             log.debug(AnsiOutput
-                .toString(AnsiColor.BRIGHT_BLUE, "Halo api doc was enabled at  ", blogUrl,
+                .toString(AnsiColor.BRIGHT_BLUE, "Halo api documentation was enabled at  ", blogUrl,
                     "/swagger-ui.html"));
         }
         log.info(AnsiOutput.toString(AnsiColor.BRIGHT_YELLOW, "Halo has started successfully!"));
@@ -143,10 +146,6 @@ public class StartedListener implements ApplicationListener<ApplicationStartedEv
         Boolean isInstalled = optionService
             .getByPropertyOrDefault(PrimaryProperties.IS_INSTALLED, Boolean.class, false);
 
-        if (isInstalled) {
-            return;
-        }
-
         try {
             String themeClassPath = ResourceUtils.CLASSPATH_URL_PREFIX + ThemeService.THEME_FOLDER;
 
@@ -169,7 +168,7 @@ public class StartedListener implements ApplicationListener<ApplicationStartedEv
             Path themePath = themeService.getBasePath();
 
             // Fix the problem that the project cannot start after moving to a new server
-            if (!haloProperties.getMode().isProductionEnv() || Files.notExists(themePath)) {
+            if (Files.notExists(themePath) || !isInstalled) {
                 FileUtils.copyFolder(source, themePath);
                 log.debug("Copied theme folder from [{}] to [{}]", source, themePath);
             } else {

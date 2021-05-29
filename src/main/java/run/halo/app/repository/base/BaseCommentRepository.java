@@ -74,6 +74,24 @@ public interface BaseCommentRepository<COMMENT extends BaseComment>
     List<CommentCountProjection> countByPostIds(@NonNull Collection<Integer> postIds);
 
     /**
+     * Counts comment count by comment status and post id collection.
+     *
+     * @param status status must not be null
+     * @param postIds post id collection must not be null
+     * @return a list of comment count
+     */
+    @Query(
+        "select new run.halo.app.model.projection.CommentCountProjection(count(comment.id), "
+            + "comment.postId) "
+            + "from BaseComment comment "
+            + "where comment.status = ?1 "
+            + "and comment.postId in ?2 "
+            + "group by comment.postId")
+    @NonNull
+    List<CommentCountProjection> countByStatusAndPostIds(@NonNull CommentStatus status,
+        @NonNull Collection<Integer> postIds);
+
+    /**
      * Count comments by post id.
      *
      * @param postId post id must not be null.
@@ -205,4 +223,22 @@ public interface BaseCommentRepository<COMMENT extends BaseComment>
     @NonNull
     List<CommentChildrenCountProjection> findDirectChildrenCount(
         @NonNull Collection<Long> commentIds);
+
+    /**
+     * Finds direct children count by comment ids and status.
+     *
+     * @param commentIds comment ids must not be null.
+     * @param status comment status must not be null.
+     * @return a list of CommentChildrenCountProjection
+     */
+    @Query(
+        "select new run.halo.app.model.projection.CommentChildrenCountProjection(count(comment"
+            + ".id), comment.parentId) "
+            + "from BaseComment comment "
+            + "where comment.parentId in ?1 "
+            + "and comment.status = ?2 "
+            + "group by comment.parentId")
+    @NonNull
+    List<CommentChildrenCountProjection> findDirectChildrenCount(
+        @NonNull Collection<Long> commentIds, @NonNull CommentStatus status);
 }

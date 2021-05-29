@@ -2,7 +2,7 @@ package run.halo.app.service.impl;
 
 import com.qiniu.common.Zone;
 import com.qiniu.storage.Region;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -12,7 +12,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import run.halo.app.cache.AbstractStringCacheStore;
-import run.halo.app.config.properties.HaloProperties;
 import run.halo.app.event.options.OptionUpdatedEvent;
 import run.halo.app.exception.MissingPropertyException;
 import run.halo.app.model.dto.OptionDTO;
@@ -231,7 +229,7 @@ public class OptionServiceImpl extends AbstractCrudService<Option, Integer>
     }
 
     @Override
-    public Map<String, Object> listOptions(List<String> keys) {
+    public Map<String, Object> listOptions(Collection<String> keys) {
         if (CollectionUtils.isEmpty(keys)) {
             return Collections.emptyMap();
         }
@@ -276,7 +274,7 @@ public class OptionServiceImpl extends AbstractCrudService<Option, Integer>
     private Specification<Option> buildSpecByQuery(@NonNull OptionQuery optionQuery) {
         Assert.notNull(optionQuery, "Option query must not be null");
 
-        return (Specification<Option>) (root, query, criteriaBuilder) -> {
+        return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new LinkedList<>();
 
             if (optionQuery.getType() != null) {
@@ -379,14 +377,16 @@ public class OptionServiceImpl extends AbstractCrudService<Option, Integer>
     }
 
     @Override
-    public <V, E extends ValueEnum<V>> Optional<E> getValueEnumByProperty(PropertyEnum property,
+    public <V, E extends Enum<E> & ValueEnum<V>> Optional<E> getValueEnumByProperty(
+        PropertyEnum property,
         Class<V> valueType, Class<E> enumType) {
         return getByProperty(property).map(value -> ValueEnum
             .valueToEnum(enumType, PropertyEnum.convertTo(value.toString(), valueType)));
     }
 
     @Override
-    public <V, E extends ValueEnum<V>> E getValueEnumByPropertyOrDefault(PropertyEnum property,
+    public <V, E extends Enum<E> & ValueEnum<V>> E getValueEnumByPropertyOrDefault(
+        PropertyEnum property,
         Class<V> valueType, Class<E> enumType, E defaultValue) {
         return getValueEnumByProperty(property, valueType, enumType).orElse(defaultValue);
     }
@@ -616,37 +616,10 @@ public class OptionServiceImpl extends AbstractCrudService<Option, Integer>
     }
 
     @Override
-    public List<OptionDTO> replaceUrl(String oldUrl, String newUrl) {
-        List<Option> options = listAll();
-        List<Option> replaced = new ArrayList<>();
-        options.forEach(option -> {
-            if (StringUtils.isNotEmpty(option.getValue())) {
-                option.setValue(option.getValue().replaceAll(oldUrl, newUrl));
-            }
-            replaced.add(option);
-        });
-        List<Option> updated = updateInBatch(replaced);
-        eventPublisher.publishEvent(new OptionUpdatedEvent(this));
-        return updated.stream().map(this::convertToDto).collect(Collectors.toList());
-    }
-
-    @Override
     public OptionSimpleDTO convertToDto(Option option) {
         Assert.notNull(option, "Option must not be null");
 
         return new OptionSimpleDTO().convertFrom(option);
-    }
-
-    @Deprecated
-    private void cleanCache() {
-        cacheStore.delete(OPTIONS_KEY);
-    }
-
-    @Deprecated
-    private void publishOptionUpdatedEvent() {
-        flush();
-        cleanCache();
-        eventPublisher.publishEvent(new OptionUpdatedEvent(this));
     }
 }
 
